@@ -54,19 +54,24 @@ st.markdown("---")
 st.sidebar.title("ナビゲーション")
 # セッション状態を使用して選択ページを保持
 if 'page' not in st.session_state:
-    st.session_state.page = "チャット" # デフォルトページ
+    st.session_state.page = "ChatGPT風" # デフォルトページを変更
 
 page = st.sidebar.radio(
     "ページ選択",
-    ["チャット", "履歴閲覧", "サンプルデータ管理"],
+    ["ChatGPT風", "チャット", "履歴閲覧", "サンプルデータ管理"],
     key="page_selector",
-    index=["チャット", "履歴閲覧", "サンプルデータ管理"].index(st.session_state.page), # 現在のページを選択状態にする
-    on_change=lambda: setattr(st.session_state, 'page', st.session_state.page_selector) # 選択変更時に状態を更新
+    index=["ChatGPT風", "チャット", "履歴閲覧", "サンプルデータ管理"].index(st.session_state.page),
+    on_change=lambda: setattr(st.session_state, 'page', st.session_state.page_selector)
 )
 
 
 # --- メインコンテンツ ---
-if st.session_state.page == "チャット":
+if st.session_state.page == "ChatGPT風":
+    if pipe:
+        ui.display_chatgpt_style_page(pipe)
+    else:
+        st.error("チャット機能を利用できません。モデルの読み込みに失敗しました。")
+elif st.session_state.page == "チャット":
     if pipe:
         ui.display_chat_page(pipe)
     else:
