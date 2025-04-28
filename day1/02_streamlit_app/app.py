@@ -64,7 +64,6 @@ page = st.sidebar.radio(
     on_change=lambda: setattr(st.session_state, 'page', st.session_state.page_selector)
 )
 
-
 # --- メインコンテンツ ---
 if st.session_state.page == "ChatGPT風":
     if pipe:
