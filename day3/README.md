@@ -23,7 +23,7 @@
 講義内の演習の時間では、ディレクトリ内の「ai_engineering_03.ipynb」を使用しています。
 このノートブックでは、Google ColabのL4というGPUを使用する想定で作られています。
 
-- [Open with Colab(GPU:L4)](https://colab.research.google.com/github/matsuolab/lecture-ai-engineering/blob/master/day3/ai_engineering_03.ipynb)
+- [Open with Colab(GPU:L4)](https://colab.research.google.com/github/tshigata/lecture-ai-engineering/blob/master/day3/ai_engineering_03.ipynb)
 
 ## 注意事項
 L4はGoogle Colabの無料利用では選択できない可能性があります。
@@ -31,7 +31,7 @@ L4はGoogle Colabの無料利用では選択できない可能性があります
 演習として説明を行う都合上、講師の環境では「L4」を使用しますが、受講生の方で「L4」を使用できない場合は、
 無料で利用可能な「T4」向けのノートブック「ai_engineering_03_T4.ipynb」も用意したのでこちらを使用して演習を行なってください。
 
-- [Open with Colab(GPU:T4)](https://colab.research.google.com/github/matsuolab/lecture-ai-engineering/blob/master/day3/ai_engineering_03_T4.ipynb)
+- [Open with Colab(GPU:T4)](https://colab.research.google.com/github/tshigata/lecture-ai-engineering/blob/master/day3/ai_engineering_03_T4.ipynb)
 
 演習の大まかな流れはどちらのノートブックでも同じように体験できるように構成していますが、細かい部分で内容が異なる場合がある点はご了承をお願いします。
 （主な違いとしては、T4のノートブックで利用するモデルの方がサイズが小さいことと、演習として実際に試せる内容が少ない（「5. さらに改善方法を検討する」はGPUメモリが不足して実行できない）などの違いがあります。）
