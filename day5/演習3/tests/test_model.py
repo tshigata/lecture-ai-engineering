@@ -90,13 +90,16 @@ def train_model(sample_data, preprocessor):
     model = Pipeline(
         steps=[
             ("preprocessor", preprocessor),
-            ("classifier", RandomForestClassifier(
-                n_estimators=200,
-                max_depth=10,
-                min_samples_split=5,
-                min_samples_leaf=2,
-                random_state=42
-            )),
+            (
+                "classifier",
+                RandomForestClassifier(
+                    n_estimators=200,
+                    max_depth=10,
+                    min_samples_split=5,
+                    min_samples_leaf=2,
+                    random_state=42,
+                ),
+            ),
         ]
     )
 
@@ -125,29 +128,31 @@ def test_model_exists():
 def save_metrics(metrics):
     """モデルの性能指標を保存"""
     os.makedirs(MODEL_DIR, exist_ok=True)
-    
+
     # 既存のメトリクスを読み込む
     if os.path.exists(METRICS_PATH):
-        with open(METRICS_PATH, 'r') as f:
+        with open(METRICS_PATH, "r") as f:
             history = json.load(f)
     else:
         history = []
-    
+
     # 新しいメトリクスを追加
-    metrics['timestamp'] = datetime.now().isoformat()
+    metrics["timestamp"] = datetime.now().isoformat()
     history.append(metrics)
-    
+
     # メトリクスを保存
-    with open(METRICS_PATH, 'w') as f:
+    with open(METRICS_PATH, "w") as f:
         json.dump(history, f, indent=2)
+
 
 def load_previous_metrics():
     """過去のメトリクスを読み込む"""
     if os.path.exists(METRICS_PATH):
-        with open(METRICS_PATH, 'r') as f:
+        with open(METRICS_PATH, "r") as f:
             history = json.load(f)
         return history[-1] if history else None
     return None
+
 
 def test_model_accuracy(train_model):
     """モデルの精度を検証"""
@@ -163,8 +168,8 @@ def test_model_accuracy(train_model):
 
     # メトリクスの保存
     metrics = {
-        'accuracy': accuracy,
-        'inference_time': inference_time
+        "accuracy": accuracy,
+        "inference_time": inference_time,
     }
     save_metrics(metrics)
 
@@ -172,8 +177,14 @@ def test_model_accuracy(train_model):
     previous_metrics = load_previous_metrics()
     if previous_metrics:
         print("\n=== 過去のモデルとの比較 ===")
-        print(f"accuracy: {accuracy:.4f} (前回: {previous_metrics['accuracy']:.4f}, 差分: {accuracy - previous_metrics['accuracy']:+.4f})")
-        print(f"inference_time: {inference_time:.4f}秒 (前回: {previous_metrics['inference_time']:.4f}秒, 差分: {inference_time - previous_metrics['inference_time']:+.4f}秒)")
+        print(
+            f"accuracy: {accuracy:.4f} (前回: {previous_metrics['accuracy']:.4f}, "
+            f"差分: {accuracy - previous_metrics['accuracy']:+.4f})"
+        )
+        print(
+            f"inference_time: {inference_time:.4f}秒 (前回: {previous_metrics['inference_time']:.4f}秒, "
+            f"差分: {inference_time - previous_metrics['inference_time']:+.4f}秒)"
+        )
     else:
         print("\n=== 現在のモデル性能 ===")
         print(f"accuracy: {accuracy:.4f}")
