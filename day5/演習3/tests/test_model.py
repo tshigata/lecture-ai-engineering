@@ -5,6 +5,7 @@ import numpy as np
 import pickle
 import time
 import json
+import logging
 from datetime import datetime
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split, cross_val_score
@@ -13,6 +14,10 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
+
+# ロガーの設定
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 # テスト用データとモデルパスを定義
 DATA_PATH = os.path.join(os.path.dirname(__file__), "../data/Titanic.csv")
@@ -176,19 +181,19 @@ def test_model_accuracy(train_model):
     # 過去のメトリクスと比較
     previous_metrics = load_previous_metrics()
     if previous_metrics:
-        print("\n=== 過去のモデルとの比較 ===")
-        print(
+        logger.info("\n=== 過去のモデルとの比較 ===")
+        logger.info(
             f"accuracy: {accuracy:.4f} (前回: {previous_metrics['accuracy']:.4f}, "
             f"差分: {accuracy - previous_metrics['accuracy']:+.4f})"
         )
-        print(
+        logger.info(
             f"inference_time: {inference_time:.4f}秒 (前回: {previous_metrics['inference_time']:.4f}秒, "
             f"差分: {inference_time - previous_metrics['inference_time']:+.4f}秒)"
         )
     else:
-        print("\n=== 現在のモデル性能 ===")
-        print(f"accuracy: {accuracy:.4f}")
-        print(f"inference_time: {inference_time:.4f}秒")
+        logger.info("\n=== 現在のモデル性能 ===")
+        logger.info(f"accuracy: {accuracy:.4f}")
+        logger.info(f"inference_time: {inference_time:.4f}秒")
 
     # 性能基準の検証
     assert accuracy >= 0.75, f"モデルの精度が低すぎます: {accuracy}"
