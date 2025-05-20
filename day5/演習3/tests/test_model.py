@@ -8,7 +8,7 @@ import json
 import logging
 from datetime import datetime
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import accuracy_score
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -96,6 +96,7 @@ def train_model(sample_data, preprocessor):
         steps=[
             ("preprocessor", preprocessor),
             ("classifier", RandomForestClassifier(n_estimators=200, random_state=42)),
+
         ]
     )
 
@@ -157,17 +158,10 @@ def test_model_accuracy(train_model):
     # 推論時間の計測
     start_time = time.time()
     y_pred = model.predict(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
-    precision = precision_score(y_test, y_pred)
-    recall = recall_score(y_test, y_pred)
-    f1 = f1_score(y_test, y_pred)
-    roc_auc = roc_auc_score(y_test, y_pred_proba)
+    inference_time = time.time() - start_time
 
-    print(f"Accuracy: {accuracy:.3f}")
-    print(f"Precision: {precision:.3f}")
-    print(f"Recall: {recall:.3f}")
-    print(f"F1 Score: {f1:.3f}")
-    print(f"ROC AUC: {roc_auc:.3f}")
+    # 精度計算
+    accuracy = accuracy_score(y_test, y_pred)
 
     # メトリクスの保存
     metrics = {
@@ -195,20 +189,6 @@ def test_model_accuracy(train_model):
 
     # 性能基準の検証
     assert accuracy >= 0.75, f"モデルの精度が低すぎます: {accuracy}"
-
-
-def test_model_inference_time(train_model):
-    """モデルの推論時間を検証"""
-    model, X_test, _ = train_model
-
-    # 推論時間の計測
-    start_time = time.time()
-    model.predict(X_test)
-    end_time = time.time()
-
-    inference_time = end_time - start_time
-
-    # 推論時間が1秒未満であることを確認
     assert inference_time < 1.0, f"推論時間が長すぎます: {inference_time}秒"
 
 
@@ -225,26 +205,14 @@ def test_model_reproducibility(sample_data, preprocessor):
     model1 = Pipeline(
         steps=[
             ("preprocessor", preprocessor),
-            ("classifier", RandomForestClassifier(
-                n_estimators=200,
-                max_depth=10,
-                min_samples_split=5,
-                min_samples_leaf=2,
-                random_state=42
-            )),
+            ("classifier", RandomForestClassifier(n_estimators=100, random_state=42)),
         ]
     )
 
     model2 = Pipeline(
         steps=[
             ("preprocessor", preprocessor),
-            ("classifier", RandomForestClassifier(
-                n_estimators=200,
-                max_depth=10,
-                min_samples_split=5,
-                min_samples_leaf=2,
-                random_state=42
-            )),
+            ("classifier", RandomForestClassifier(n_estimators=100, random_state=42)),
         ]
     )
 
