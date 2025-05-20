@@ -96,7 +96,6 @@ def train_model(sample_data, preprocessor):
         steps=[
             ("preprocessor", preprocessor),
             ("classifier", RandomForestClassifier(n_estimators=200, random_state=42)),
-
         ]
     )
 
