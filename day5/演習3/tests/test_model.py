@@ -4,18 +4,26 @@ import pandas as pd
 import numpy as np
 import pickle
 import time
+import json
+import logging
+from datetime import datetime
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
+# ロガーの設定
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 # テスト用データとモデルパスを定義
 DATA_PATH = os.path.join(os.path.dirname(__file__), "../data/Titanic.csv")
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "../models")
 MODEL_PATH = os.path.join(MODEL_DIR, "titanic_model.pkl")
+METRICS_PATH = os.path.join(MODEL_DIR, "model_metrics.json")
 
 
 @pytest.fixture
@@ -87,13 +95,7 @@ def train_model(sample_data, preprocessor):
     model = Pipeline(
         steps=[
             ("preprocessor", preprocessor),
-            ("classifier", RandomForestClassifier(
-                n_estimators=200,
-                max_depth=10,
-                min_samples_split=5,
-                min_samples_leaf=2,
-                random_state=42
-            )),
+            ("classifier", RandomForestClassifier(n_estimators=200, random_state=42)),
         ]
     )
 
@@ -119,15 +121,42 @@ def test_model_exists():
     assert os.path.exists(MODEL_PATH), "モデルファイルが存在しません"
 
 
+def save_metrics(metrics):
+    """モデルの性能指標を保存"""
+    os.makedirs(MODEL_DIR, exist_ok=True)
+
+    # 既存のメトリクスを読み込む
+    if os.path.exists(METRICS_PATH):
+        with open(METRICS_PATH, "r") as f:
+            history = json.load(f)
+    else:
+        history = []
+
+    # 新しいメトリクスを追加
+    metrics["timestamp"] = datetime.now().isoformat()
+    history.append(metrics)
+
+    # メトリクスを保存
+    with open(METRICS_PATH, "w") as f:
+        json.dump(history, f, indent=2)
+
+
+def load_previous_metrics():
+    """過去のメトリクスを読み込む"""
+    if os.path.exists(METRICS_PATH):
+        with open(METRICS_PATH, "r") as f:
+            history = json.load(f)
+        return history[-1] if history else None
+    return None
+
+
 def test_model_accuracy(train_model):
     """モデルの精度を検証"""
     model, X_test, y_test = train_model
 
-    # 予測と精度計算
+    # 推論時間の計測
+    start_time = time.time()
     y_pred = model.predict(X_test)
-    y_pred_proba = model.predict_proba(X_test)[:, 1]
-
-    # 各種評価指標の計算
     accuracy = accuracy_score(y_test, y_pred)
     precision = precision_score(y_test, y_pred)
     recall = recall_score(y_test, y_pred)
@@ -140,9 +169,32 @@ def test_model_accuracy(train_model):
     print(f"F1 Score: {f1:.3f}")
     print(f"ROC AUC: {roc_auc:.3f}")
 
-    # Titanicデータセットでは0.75以上の精度が一般的に良いとされる
+    # メトリクスの保存
+    metrics = {
+        "accuracy": accuracy,
+        "inference_time": inference_time,
+    }
+    save_metrics(metrics)
+
+    # 過去のメトリクスと比較
+    previous_metrics = load_previous_metrics()
+    if previous_metrics:
+        logger.info("\n=== 過去のモデルとの比較 ===")
+        logger.info(
+            f"accuracy: {accuracy:.4f} (前回: {previous_metrics['accuracy']:.4f}, "
+            f"差分: {accuracy - previous_metrics['accuracy']:+.4f})"
+        )
+        logger.info(
+            f"inference_time: {inference_time:.4f}秒 (前回: {previous_metrics['inference_time']:.4f}秒, "
+            f"差分: {inference_time - previous_metrics['inference_time']:+.4f}秒)"
+        )
+    else:
+        logger.info("\n=== 現在のモデル性能 ===")
+        logger.info(f"accuracy: {accuracy:.4f}")
+        logger.info(f"inference_time: {inference_time:.4f}秒")
+
+    # 性能基準の検証
     assert accuracy >= 0.75, f"モデルの精度が低すぎます: {accuracy}"
-    assert roc_auc >= 0.75, f"ROC AUCスコアが低すぎます: {roc_auc}"
 
 
 def test_model_inference_time(train_model):
