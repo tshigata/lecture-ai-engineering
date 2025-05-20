@@ -5,8 +5,8 @@ import numpy as np
 import pickle
 import time
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
@@ -83,13 +83,23 @@ def train_model(sample_data, preprocessor):
         X, y, test_size=0.2, random_state=42
     )
 
-    # モデルパイプラインの作成
+    # モデルパイプラインの作成（ハイパーパラメータを最適化）
     model = Pipeline(
         steps=[
             ("preprocessor", preprocessor),
-            ("classifier", RandomForestClassifier(n_estimators=200, random_state=42)),
+            ("classifier", RandomForestClassifier(
+                n_estimators=200,
+                max_depth=10,
+                min_samples_split=5,
+                min_samples_leaf=2,
+                random_state=42
+            )),
         ]
     )
+
+    # 交差検証による性能評価
+    cv_scores = cross_val_score(model, X_train, y_train, cv=5)
+    print(f"交差検証スコア: {cv_scores.mean():.3f} (+/- {cv_scores.std() * 2:.3f})")
 
     # モデルの学習
     model.fit(X_train, y_train)
@@ -115,10 +125,24 @@ def test_model_accuracy(train_model):
 
     # 予測と精度計算
     y_pred = model.predict(X_test)
+    y_pred_proba = model.predict_proba(X_test)[:, 1]
+
+    # 各種評価指標の計算
     accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred)
+    recall = recall_score(y_test, y_pred)
+    f1 = f1_score(y_test, y_pred)
+    roc_auc = roc_auc_score(y_test, y_pred_proba)
+
+    print(f"Accuracy: {accuracy:.3f}")
+    print(f"Precision: {precision:.3f}")
+    print(f"Recall: {recall:.3f}")
+    print(f"F1 Score: {f1:.3f}")
+    print(f"ROC AUC: {roc_auc:.3f}")
 
     # Titanicデータセットでは0.75以上の精度が一般的に良いとされる
     assert accuracy >= 0.75, f"モデルの精度が低すぎます: {accuracy}"
+    assert roc_auc >= 0.75, f"ROC AUCスコアが低すぎます: {roc_auc}"
 
 
 def test_model_inference_time(train_model):
@@ -149,14 +173,26 @@ def test_model_reproducibility(sample_data, preprocessor):
     model1 = Pipeline(
         steps=[
             ("preprocessor", preprocessor),
-            ("classifier", RandomForestClassifier(n_estimators=100, random_state=42)),
+            ("classifier", RandomForestClassifier(
+                n_estimators=200,
+                max_depth=10,
+                min_samples_split=5,
+                min_samples_leaf=2,
+                random_state=42
+            )),
         ]
     )
 
     model2 = Pipeline(
         steps=[
             ("preprocessor", preprocessor),
-            ("classifier", RandomForestClassifier(n_estimators=100, random_state=42)),
+            ("classifier", RandomForestClassifier(
+                n_estimators=200,
+                max_depth=10,
+                min_samples_split=5,
+                min_samples_leaf=2,
+                random_state=42
+            )),
         ]
     )
 
