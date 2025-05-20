@@ -1,0 +1,10 @@
+[project]
+name = "day5"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "kedro>=0.19.12",
+    "mlflow>=2.22.0",
+]
